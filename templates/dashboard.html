@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPAS Dashboard – Bowen University</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#060d1a;
+  --surface:#0d1b2e;
+  --card:#111f35;
+  --card2:#0f1c30;
+  --border:#1e3352;
+  --accent:#00c2ff;
+  --accent2:#005fa3;
+  --gold:#f0b429;
+  --green:#22c55e;
+  --red:#ff4e4e;
+  --text:#e8f4fd;
+  --muted:#7a9bb5;
+  --radius:14px;
+  --sidebar:240px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden;}
+
+/* ─── SIDEBAR ─── */
+.sidebar{
+  width:var(--sidebar);min-height:100vh;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;z-index:100;
+}
+.sidebar-logo{
+  padding:24px 20px;
+  border-bottom:1px solid var(--border);
+}
+.logo-mark{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:3px;text-transform:uppercase;}
+.logo-name{font-size:17px;font-weight:700;margin-top:2px;}
+.logo-uni{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4;}
+
+.nav{flex:1;padding:16px 10px;}
+.nav-section{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:12px 10px 6px;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:10px;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--muted);
+  transition:all .15s;margin-bottom:2px;
+}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text);}
+.nav-item.active{background:rgba(0,194,255,.1);color:var(--accent);border-left:3px solid var(--accent);}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;}
+
+.sidebar-footer{
+  padding:16px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+.user-info{flex:1;min-width:0;}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:10px;color:var(--muted);text-transform:capitalize;}
+.logout-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;}
+.logout-btn:hover{color:var(--red);}
+
+/* ─── MAIN CONTENT ─── */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+.topbar{
+  padding:16px 28px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);position:sticky;top:0;z-index:50;
+}
+.page-title{font-size:18px;font-weight:600;}
+.topbar-controls{display:flex;gap:10px;align-items:center;}
+
+select.filter-select{
+  padding:8px 14px;background:var(--card);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;
+  cursor:pointer;outline:none;
+}
+.btn{
+  padding:8px 18px;border-radius:8px;border:none;cursor:pointer;
+  font-family:'Sora',sans-serif;font-size:13px;font-weight:600;transition:all .15s;
+}
+.btn-accent{background:var(--accent);color:#000;}
+.btn-accent:hover{opacity:.85;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:rgba(255,78,78,.15);border:1px solid rgba(255,78,78,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,78,78,.25);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+
+/* ─── VIEWS ─── */
+.view{display:none;padding:28px;}
+.view.active{display:block;}
+
+/* ─── STAT CARDS ─── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;right:0;
+  width:80px;height:80px;border-radius:0 var(--radius) 0 100%;
+  opacity:.06;
+}
+.stat-card.blue::before{background:var(--accent);}
+.stat-card.gold::before{background:var(--gold);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.red::before{background:var(--red);}
+.stat-icon{font-size:22px;margin-bottom:12px;}
+.stat-val{font-size:30px;font-weight:700;font-family:'JetBrains Mono';margin-bottom:4px;}
+.stat-lbl{font-size:12px;color:var(--muted);}
+.stat-card.blue .stat-val{color:var(--accent);}
+.stat-card.gold .stat-val{color:var(--gold);}
+.stat-card.green .stat-val{color:var(--green);}
+.stat-card.red .stat-val{color:var(--red);}
+
+/* ─── CHARTS ROW ─── */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;}
+.chart-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;
+}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.card-title{font-size:14px;font-weight:600;}
+.card-badge{font-size:11px;padding:3px 10px;border-radius:50px;font-weight:600;}
+.badge-blue{background:rgba(0,194,255,.12);color:var(--accent);}
+.badge-gold{background:rgba(240,180,41,.12);color:var(--gold);}
+
+/* ─── TABLES ─── */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);}
+.search-input{
+  padding:7px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;
+  outline:none;width:220px;
+}
+.search-input:focus{border-color:var(--accent);}
+table{width:100%;border-collapse:collapse;}
+th{padding:12px 18px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+td{padding:13px 18px;font-size:13px;border-bottom:1px solid rgba(30,51,82,.5);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.grade-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;font-family:'JetBrains Mono';}
+.grade-A{background:rgba(34,197,94,.15);color:#4ade80;}
+.grade-B{background:rgba(0,194,255,.15);color:var(--accent);}
+.grade-C{background:rgba(240,180,41,.15);color:var(--gold);}
+.grade-D{background:rgba(255,165,0,.15);color:orange;}
+.grade-E{background:rgba(255,100,50,.15);color:#ff8c00;}
+.grade-F{background:rgba(255,78,78,.15);color:var(--red);}
+.risk-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(255,78,78,.15);color:var(--red);}
+.matric-code{font-family:'JetBrains Mono';font-size:12px;color:var(--accent);}
+
+/* ─── MODAL ─── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
+  transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  width:90%;max-width:520px;max-height:90vh;overflow-y:auto;
+  transform:translateY(20px);transition:transform .2s;
+}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:22px 24px;border-bottom:1px solid var(--border);}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;}
+.modal-body{padding:24px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
+.form-group input,
+.form-group select{
+  width:100%;padding:10px 14px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;
+  transition:border-color .15s;
+}
+.form-group input:focus,
+.form-group select:focus{border-color:var(--accent);}
+.form-group select option{background:var(--card);}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+
+/* alert */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
+.alert.error{background:rgba(255,78,78,.1);border:1px solid rgba(255,78,78,.25);color:#ff8e8e;}
+.alert.success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#4ade80;}
+
+/* at-risk table */
+.risk-row td:first-child{color:var(--red);}
+.progress-bar-wrap{background:rgba(255,255,255,.06);border-radius:20px;height:6px;margin-top:4px;}
+.progress-bar{height:6px;border-radius:20px;transition:width .4s;}
+
+/* semester tabs */
+.sem-tabs{display:flex;gap:8px;margin-bottom:20px;}
+.sem-tab{padding:6px 18px;border-radius:50px;border:1px solid var(--border);font-size:13px;cursor:pointer;color:var(--muted);transition:all .15s;}
+.sem-tab.active{background:var(--accent2);color:var(--text);border-color:var(--accent2);}
+
+/* student detail */
+.student-header{display:flex;align-items:center;gap:16px;padding:20px;background:rgba(0,194,255,.05);border-bottom:1px solid var(--border);}
+.student-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;}
+
+/* empty state */
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty .icon{font-size:40px;margin-bottom:12px;opacity:.4;}
+
+/* loading */
+.loader{text-align:center;padding:40px;color:var(--muted);}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* toast */
+.toast{
+  position:fixed;bottom:28px;right:28px;z-index:500;
+  padding:12px 20px;border-radius:10px;font-size:13px;
+  transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80;}
+.toast.error{background:rgba(255,78,78,.15);border:1px solid rgba(255,78,78,.3);color:#ff8e8e;}
+
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .charts-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">SPAS · 2026</div>
+    <div class="logo-name">Analytics System</div>
+    <div class="logo-uni">Bowen University, Iwo<br>Dept. of Computer Science</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="navigate('overview')"><span class="icon">📊</span>Overview</div>
+    <div class="nav-item" onclick="navigate('students')"><span class="icon">👥</span>Students</div>
+    <div class="nav-item" onclick="navigate('scores')"><span class="icon">📋</span>Scores</div>
+    <div class="nav-section">Analytics</div>
+    <div class="nav-item" onclick="navigate('performance')"><span class="icon">📈</span>Course Analysis</div>
+    <div class="nav-item" onclick="navigate('atrisk')"><span class="icon">⚠️</span>At-Risk Students</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="avatar" id="user-avatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="user-name">Loading…</div>
+      <div class="user-role" id="user-role"></div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()" title="Logout">⏻</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Overview</div>
+    <div class="topbar-controls">
+      <select class="filter-select" id="filter-session" onchange="applyFilters()">
+        <option value="2024/2025">2024/2025</option>
+      </select>
+      <select class="filter-select" id="filter-semester" onchange="applyFilters()">
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ═══ OVERVIEW ═══ -->
+  <div class="view active" id="view-overview">
+    <div class="stats-grid">
+      <div class="stat-card blue"><div class="stat-icon">👥</div><div class="stat-val" id="ov-students">–</div><div class="stat-lbl">Total Students</div></div>
+      <div class="stat-card gold"><div class="stat-icon">📊</div><div class="stat-val" id="ov-avg">–</div><div class="stat-lbl">Class Average</div></div>
+      <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-val" id="ov-pass">–</div><div class="stat-lbl">Pass Rate</div></div>
+      <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-val" id="ov-risk">–</div><div class="stat-lbl">At-Risk Students</div></div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">Course Performance Overview</div>
+          <span class="card-badge badge-blue">Bar Chart</span>
+        </div>
+        <canvas id="chart-courses" height="120"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">Grade Distribution</div>
+          <span class="card-badge badge-gold">Doughnut</span>
+        </div>
+        <canvas id="chart-grades" height="180"></canvas>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div class="card-title">⚠️ At-Risk Students (avg &lt; 45)</div>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Matric No</th><th>Average</th><th>Progress</th></tr></thead>
+        <tbody id="risk-table-body"><tr><td colspan="5" class="loader"><span class="spinner"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ STUDENTS ═══ -->
+  <div class="view" id="view-students">
+    <div class="table-card">
+      <div class="table-header">
+        <input class="search-input" id="student-search" placeholder="🔍 Search students…" oninput="filterStudents()">
+        <button class="btn btn-accent" onclick="openModal('modal-add-student')">+ Add Student</button>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Matric No</th><th>Level</th><th>Department</th><th>Actions</th></tr></thead>
+        <tbody id="students-table-body"><tr><td colspan="6" class="loader"><span class="spinner"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ SCORES ═══ -->
+  <div class="view" id="view-scores">
+    <div class="table-card">
+      <div class="table-header">
+        <input class="search-input" id="scores-search" placeholder="🔍 Search by matric / course…" oninput="filterScores()">
+        <button class="btn btn-accent" onclick="openModal('modal-add-score')">+ Add Score</button>
+      </div>
+      <table>
+        <thead><tr><th>Matric No</th><th>Name</th><th>Course</th><th>CA1</th><th>CA2</th><th>Exam</th><th>Total</th><th>Grade</th><th>Actions</th></tr></thead>
+        <tbody id="scores-table-body"><tr><td colspan="9" class="loader"><span class="spinner"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ COURSE PERFORMANCE ═══ -->
+  <div class="view" id="view-performance">
+    <div class="chart-card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <div class="card-title">Course-level Analysis</div>
+      </div>
+      <canvas id="chart-course-detail" height="80"></canvas>
+    </div>
+    <div class="table-card">
+      <div class="table-header"><div class="card-title">Course Statistics</div></div>
+      <table>
+        <thead><tr><th>Course Code</th><th>Students</th><th>Average</th><th>Highest</th><th>Lowest</th><th>Pass Rate</th></tr></thead>
+        <tbody id="perf-table-body"><tr><td colspan="6" class="loader"><span class="spinner"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ AT-RISK ═══ -->
+  <div class="view" id="view-atrisk">
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat-card red"><div class="stat-icon">🚨</div><div class="stat-val" id="ar-count">–</div><div class="stat-lbl">At-Risk Students</div></div>
+      <div class="stat-card gold"><div class="stat-icon">📉</div><div class="stat-val" id="ar-lowest">–</div><div class="stat-lbl">Lowest Average</div></div>
+      <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-val" id="ar-class-avg">–</div><div class="stat-lbl">Class Average</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-header"><div class="card-title">Students Requiring Intervention</div></div>
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Matric No</th><th>Average</th><th>Status</th></tr></thead>
+        <tbody id="atrisk-table-body"><tr><td colspan="5" class="loader"><span class="spinner"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Add Student -->
+<div class="modal-overlay" id="modal-add-student" onclick="closeModalOnBg(event,'modal-add-student')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Add New Student</div>
+      <button class="modal-close" onclick="closeModal('modal-add-student')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert" id="as-alert"></div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="as-name" placeholder="Akanbi Timothy Oluwagbemiga">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Matric Number</label>
+          <input type="text" id="as-matric" placeholder="BU22CSC1049" style="font-family:'JetBrains Mono'">
+        </div>
+        <div class="form-group">
+          <label>Level</label>
+          <select id="as-level">
+            <option value="100">100 Level</option>
+            <option value="200">200 Level</option>
+            <option value="300" selected>300 Level</option>
+            <option value="400">400 Level</option>
+            <option value="500">500 Level</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <input type="text" id="as-dept" value="Computer Science">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-student')">Cancel</button>
+        <button class="btn btn-accent" onclick="submitAddStudent()">Add Student</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Score -->
+<div class="modal-overlay" id="modal-add-score" onclick="closeModalOnBg(event,'modal-add-score')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Add Score Record</div>
+      <button class="modal-close" onclick="closeModal('modal-add-score')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert" id="asc-alert"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Student</label>
+          <select id="asc-student"></select>
+        </div>
+        <div class="form-group">
+          <label>Course Code</label>
+          <input type="text" id="asc-course" placeholder="CSC301" style="font-family:'JetBrains Mono'">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Session</label>
+          <input type="text" id="asc-session" value="2024/2025">
+        </div>
+        <div class="form-group">
+          <label>Semester</label>
+          <select id="asc-semester">
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CA1 (max 15)</label>
+          <input type="number" id="asc-ca1" min="0" max="15" placeholder="0–15">
+        </div>
+        <div class="form-group">
+          <label>CA2 (max 15)</label>
+          <input type="number" id="asc-ca2" min="0" max="15" placeholder="0–15">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Exam Score (max 70)</label>
+        <input type="number" id="asc-exam" min="0" max="70" placeholder="0–70">
+      </div>
+      <div id="asc-preview" style="padding:10px 14px;background:rgba(0,194,255,.07);border-radius:8px;font-size:13px;display:none;margin-bottom:8px;">
+        Total: <strong id="asc-total">–</strong> &nbsp;|&nbsp; Grade: <strong id="asc-grade">–</strong>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-score')">Cancel</button>
+        <button class="btn btn-accent" onclick="submitAddScore()">Save Score</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Score -->
+<div class="modal-overlay" id="modal-edit-score" onclick="closeModalOnBg(event,'modal-edit-score')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Edit Score</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-score')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert" id="es-alert"></div>
+      <input type="hidden" id="es-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>CA1 (max 15)</label>
+          <input type="number" id="es-ca1" min="0" max="15">
+        </div>
+        <div class="form-group">
+          <label>CA2 (max 15)</label>
+          <input type="number" id="es-ca2" min="0" max="15">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Exam (max 70)</label>
+        <input type="number" id="es-exam" min="0" max="70">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('modal-edit-score')">Cancel</button>
+        <button class="btn btn-accent" onclick="submitEditScore()">Update</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Detail -->
+<div class="modal-overlay" id="modal-student-detail" onclick="closeModalOnBg(event,'modal-student-detail')">
+  <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Student Performance</div>
+      <button class="modal-close" onclick="closeModal('modal-student-detail')">×</button>
+    </div>
+    <div id="student-detail-content"><div class="loader"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ──────────────────────────────────────────────────────────────────────────
+// State
+const state = { students:[], scores:[], allScores:[] };
+let charts = {};
+let currentView = 'overview';
+
+// ──────────────────────────────────────────────────────────────────────────
+// Init
+async function init(){
+  const me = await api('GET','/api/auth/me');
+  if(!me || me.error){ window.location.href='/auth'; return; }
+  document.getElementById('user-name').textContent = me.name;
+  document.getElementById('user-role').textContent = me.role.replace('_',' ');
+  document.getElementById('user-avatar').textContent = me.name[0].toUpperCase();
+
+  await loadSessions();
+  await refreshAll();
+}
+
+async function loadSessions(){
+  const data = await api('GET','/api/analytics/sessions');
+  if(!data) return;
+  const sel = document.getElementById('filter-session');
+  sel.innerHTML = data.sessions.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// API helper
+async function api(method, url, body){
+  try{
+    const opts = {method, headers:{'Content-Type':'application/json'}};
+    if(body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    if(res.status === 401){ window.location.href='/auth'; return null; }
+    return await res.json();
+  }catch(e){ toast('Network error','error'); return null; }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Navigation
+function navigate(view){
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active', el.getAttribute('onclick').includes(`'${view}'`));
+  });
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.add('active');
+  currentView = view;
+
+  const titles = {overview:'Overview',students:'Students',scores:'Score Records',performance:'Course Analysis',atrisk:'At-Risk Students'};
+  document.getElementById('page-title').textContent = titles[view]||view;
+  loadView(view);
+}
+
+function loadView(view){
+  if(view==='overview')     loadOverview();
+  if(view==='students')     renderStudentsTable();
+  if(view==='scores')       loadScores();
+  if(view==='performance')  loadCoursePerf();
+  if(view==='atrisk')       loadAtRisk();
+}
+
+function applyFilters(){ loadView(currentView); }
+
+function getFilters(){
+  return {
+    session:  document.getElementById('filter-session').value,
+    semester: document.getElementById('filter-semester').value
+  };
+}
+
+async function refreshAll(){
+  await Promise.all([loadStudents(), loadOverview()]);
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Students
+async function loadStudents(){
+  const data = await api('GET','/api/students');
+  if(!data) return;
+  state.students = data;
+  renderStudentsTable();
+  populateStudentSelect();
+}
+
+function renderStudentsTable(){
+  const q = (document.getElementById('student-search')?.value||'').toLowerCase();
+  const rows = state.students.filter(s=>
+    s.name.toLowerCase().includes(q) || s.matric.toLowerCase().includes(q)
+  );
+  const tbody = document.getElementById('students-table-body');
+  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="icon">👤</div>No students found</div></td></tr>`; return; }
+  tbody.innerHTML = rows.map((s,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="matric-code">${s.matric}</span></td>
+      <td>${s.level} Level</td>
+      <td>${s.department}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="viewStudent(${s.id})">📊 Profile</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.id},'${s.name}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterStudents(){ renderStudentsTable(); }
+
+function populateStudentSelect(){
+  const sel = document.getElementById('asc-student');
+  if(!sel) return;
+  sel.innerHTML = state.students.map(s=>`<option value="${s.id}">${s.name} (${s.matric})</option>`).join('');
+}
+
+async function submitAddStudent(){
+  const name   = document.getElementById('as-name').value.trim();
+  const matric = document.getElementById('as-matric').value.trim().toUpperCase();
+  const level  = document.getElementById('as-level').value;
+  const dept   = document.getElementById('as-dept').value.trim();
+  if(!name||!matric){ showModalAlert('as-alert','Name and matric required'); return; }
+
+  const res = await api('POST','/api/students',{name,matric,level:parseInt(level),department:dept});
+  if(res?.error){ showModalAlert('as-alert',res.error); return; }
+  closeModal('modal-add-student');
+  toast('Student added successfully','success');
+  await loadStudents();
+}
+
+async function deleteStudent(id, name){
+  if(!confirm(`Delete ${name} and all their scores?`)) return;
+  await api('DELETE',`/api/students/${id}`);
+  toast('Student deleted','success');
+  await loadStudents();
+  loadOverview();
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Scores
+async function loadScores(){
+  const {session,semester} = getFilters();
+  const data = await api('GET',`/api/scores?session=${encodeURIComponent(session)}&semester=${semester}`);
+  if(!data) return;
+  state.allScores = data;
+  renderScoresTable(data);
+}
+
+function renderScoresTable(scores){
+  const q = (document.getElementById('scores-search')?.value||'').toLowerCase();
+  const rows = scores.filter(s=>
+    s.student_matric?.toLowerCase().includes(q) ||
+    s.student_name?.toLowerCase().includes(q) ||
+    s.course_code?.toLowerCase().includes(q)
+  );
+  const tbody = document.getElementById('scores-table-body');
+  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="icon">📋</div>No records</div></td></tr>`; return; }
+  tbody.innerHTML = rows.map(s=>`
+    <tr>
+      <td><span class="matric-code">${s.student_matric||'–'}</span></td>
+      <td>${s.student_name||'–'}</td>
+      <td><strong>${s.course_code}</strong></td>
+      <td>${s.ca1}</td><td>${s.ca2}</td><td>${s.exam}</td>
+      <td><strong>${s.total}</strong></td>
+      <td><span class="grade-badge grade-${s.grade}">${s.grade}</span></td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="openEditScore(${s.id},${s.ca1},${s.ca2},${s.exam})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteScore(${s.id})">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterScores(){
+  const q = document.getElementById('scores-search').value.toLowerCase();
+  renderScoresTable(state.allScores.filter(s=>
+    (s.student_matric||'').toLowerCase().includes(q) ||
+    (s.student_name||'').toLowerCase().includes(q) ||
+    (s.course_code||'').toLowerCase().includes(q)
+  ));
+}
+
+async function submitAddScore(){
+  const sid     = document.getElementById('asc-student').value;
+  const course  = document.getElementById('asc-course').value.trim().toUpperCase();
+  const session = document.getElementById('asc-session').value.trim();
+  const semester= document.getElementById('asc-semester').value;
+  const ca1     = parseFloat(document.getElementById('asc-ca1').value||0);
+  const ca2     = parseFloat(document.getElementById('asc-ca2').value||0);
+  const exam    = parseFloat(document.getElementById('asc-exam').value||0);
+  if(!course){ showModalAlert('asc-alert','Course code required'); return; }
+
+  const res = await api('POST','/api/scores',{student_id:parseInt(sid),course_code:course,session,semester:parseInt(semester),ca1,ca2,exam});
+  if(res?.error){ showModalAlert('asc-alert',res.error); return; }
+  closeModal('modal-add-score');
+  toast('Score saved','success');
+  loadScores(); loadOverview();
+}
+
+function openEditScore(id,ca1,ca2,exam){
+  document.getElementById('es-id').value=id;
+  document.getElementById('es-ca1').value=ca1;
+  document.getElementById('es-ca2').value=ca2;
+  document.getElementById('es-exam').value=exam;
+  openModal('modal-edit-score');
+}
+
+async function submitEditScore(){
+  const id   = document.getElementById('es-id').value;
+  const ca1  = parseFloat(document.getElementById('es-ca1').value);
+  const ca2  = parseFloat(document.getElementById('es-ca2').value);
+  const exam = parseFloat(document.getElementById('es-exam').value);
+  const res  = await api('PUT',`/api/scores/${id}`,{ca1,ca2,exam});
+  if(res?.error){ showModalAlert('es-alert',res.error); return; }
+  closeModal('modal-edit-score');
+  toast('Score updated','success');
+  loadScores(); loadOverview();
+}
+
+async function deleteScore(id){
+  if(!confirm('Delete this score record?')) return;
+  await api('DELETE',`/api/scores/${id}`);
+  toast('Score deleted','success');
+  loadScores(); loadOverview();
+}
+
+// Live preview in add-score modal
+['asc-ca1','asc-ca2','asc-exam'].forEach(id=>{
+  setTimeout(()=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', previewScore);
+  },300);
+});
+
+function previewScore(){
+  const ca1 = parseFloat(document.getElementById('asc-ca1').value||0);
+  const ca2 = parseFloat(document.getElementById('asc-ca2').value||0);
+  const exam = parseFloat(document.getElementById('asc-exam').value||0);
+  const total = ca1+ca2+exam;
+  let grade='F';
+  if(total>=70)grade='A'; else if(total>=60)grade='B'; else if(total>=50)grade='C'; else if(total>=45)grade='D'; else if(total>=40)grade='E';
+  document.getElementById('asc-total').textContent=total.toFixed(1);
+  document.getElementById('asc-grade').textContent=grade;
+  document.getElementById('asc-preview').style.display='block';
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Overview
+async function loadOverview(){
+  const {session,semester} = getFilters();
+  const [ov, cp] = await Promise.all([
+    api('GET',`/api/analytics/overview?session=${encodeURIComponent(session)}&semester=${semester}`),
+    api('GET',`/api/analytics/course_performance?session=${encodeURIComponent(session)}&semester=${semester}`)
+  ]);
+  if(!ov) return;
+
+  document.getElementById('ov-students').textContent = ov.total_students;
+  document.getElementById('ov-avg').textContent      = ov.class_average+'%';
+  document.getElementById('ov-pass').textContent     = ov.pass_rate+'%';
+  document.getElementById('ov-risk').textContent     = ov.at_risk.length;
+
+  // Grade doughnut
+  drawGradeChart(ov.grade_dist);
+
+  // Course bar
+  if(cp) drawCourseChart(cp);
+
+  // At-risk table
+  const tbody = document.getElementById('risk-table-body');
+  if(!ov.at_risk.length){
+    tbody.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="icon">✅</div>No at-risk students</div></td></tr>`;
+  } else {
+    tbody.innerHTML = ov.at_risk.map((s,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td>${s.name}</td>
+        <td><span class="matric-code">${s.matric}</span></td>
+        <td><strong style="color:var(--red)">${s.average}</strong></td>
+        <td>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" style="width:${Math.min(s.average,100)}%;background:${s.average<30?'var(--red)':s.average<40?'orange':'var(--gold)'}"></div>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+}
+
+function drawGradeChart(dist){
+  const ctx = document.getElementById('chart-grades').getContext('2d');
+  if(charts.grades) charts.grades.destroy();
+  charts.grades = new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['A','B','C','D','E','F'],
+      datasets:[{data:[dist.A,dist.B,dist.C,dist.D,dist.E,dist.F],
+        backgroundColor:['#22c55e','#00c2ff','#f0b429','orange','#ff8c00','#ff4e4e'],
+        borderColor:'#111f35',borderWidth:3
+      }]
+    },
+    options:{plugins:{legend:{labels:{color:'#7a9bb5',font:{family:'Sora',size:12}}}},cutout:'65%'}
+  });
+}
+
+function drawCourseChart(cp){
+  const ctx = document.getElementById('chart-courses').getContext('2d');
+  if(charts.courses) charts.courses.destroy();
+  charts.courses = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:cp.map(c=>c.course),
+      datasets:[
+        {label:'Average',data:cp.map(c=>c.average),backgroundColor:'rgba(0,194,255,.6)',borderRadius:6},
+        {label:'Pass Rate%',data:cp.map(c=>c.pass_rate),backgroundColor:'rgba(34,197,94,.4)',borderRadius:6}
+      ]
+    },
+    options:{
+      plugins:{legend:{labels:{color:'#7a9bb5',font:{family:'Sora',size:11}}}},
+      scales:{
+        x:{ticks:{color:'#7a9bb5'},grid:{color:'rgba(30,51,82,.5)'}},
+        y:{ticks:{color:'#7a9bb5'},grid:{color:'rgba(30,51,82,.5)'},max:100}
+      }
+    }
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Course Performance
+async function loadCoursePerf(){
+  const {session,semester} = getFilters();
+  const cp = await api('GET',`/api/analytics/course_performance?session=${encodeURIComponent(session)}&semester=${semester}`);
+  if(!cp) return;
+
+  const ctx = document.getElementById('chart-course-detail').getContext('2d');
+  if(charts.courseDetail) charts.courseDetail.destroy();
+  charts.courseDetail = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:cp.map(c=>c.course),
+      datasets:[
+        {label:'Average',data:cp.map(c=>c.average),backgroundColor:'rgba(0,194,255,.7)',borderRadius:6},
+        {label:'Highest',data:cp.map(c=>c.highest),backgroundColor:'rgba(34,197,94,.5)',borderRadius:6},
+        {label:'Lowest', data:cp.map(c=>c.lowest), backgroundColor:'rgba(255,78,78,.5)', borderRadius:6}
+      ]
+    },
+    options:{
+      plugins:{legend:{labels:{color:'#7a9bb5',font:{family:'Sora',size:11}}}},
+      scales:{
+        x:{ticks:{color:'#7a9bb5'},grid:{color:'rgba(30,51,82,.4)'}},
+        y:{ticks:{color:'#7a9bb5'},grid:{color:'rgba(30,51,82,.4)'},max:100}
+      }
+    }
+  });
+
+  const tbody = document.getElementById('perf-table-body');
+  tbody.innerHTML = cp.map(c=>`
+    <tr>
+      <td><strong>${c.course}</strong></td>
+      <td>${c.count}</td>
+      <td>${c.average}</td>
+      <td style="color:var(--green)">${c.highest}</td>
+      <td style="color:var(--red)">${c.lowest}</td>
+      <td>
+        <span style="color:${c.pass_rate>=50?'var(--green)':'var(--red)'}">${c.pass_rate}%</span>
+      </td>
+    </tr>`).join('');
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// At-Risk
+async function loadAtRisk(){
+  const {session,semester} = getFilters();
+  const ov = await api('GET',`/api/analytics/overview?session=${encodeURIComponent(session)}&semester=${semester}`);
+  if(!ov) return;
+
+  document.getElementById('ar-count').textContent    = ov.at_risk.length;
+  document.getElementById('ar-lowest').textContent   = ov.at_risk[0]?.average||'–';
+  document.getElementById('ar-class-avg').textContent= ov.class_average+'%';
+
+  const tbody = document.getElementById('atrisk-table-body');
+  if(!ov.at_risk.length){
+    tbody.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="icon">🎉</div>No at-risk students!</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = ov.at_risk.map((s,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${s.name}</td>
+      <td><span class="matric-code">${s.matric}</span></td>
+      <td style="color:var(--red);font-weight:600">${s.average}</td>
+      <td><span class="risk-badge">Needs Intervention</span></td>
+    </tr>`).join('');
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Student detail
+async function viewStudent(id){
+  openModal('modal-student-detail');
+  document.getElementById('student-detail-content').innerHTML='<div class="loader"><span class="spinner"></span></div>';
+  const data = await api('GET',`/api/analytics/student/${id}`);
+  if(!data||data.error){ document.getElementById('student-detail-content').innerHTML='<div class="empty">Could not load</div>'; return; }
+  const st = data.student;
+  let html=`
+    <div class="student-header">
+      <div class="student-avatar">${st.name[0]}</div>
+      <div>
+        <div style="font-size:17px;font-weight:700">${st.name}</div>
+        <div class="matric-code" style="font-size:13px">${st.matric}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">${st.department} · ${st.level} Level</div>
+      </div>
+    </div>`;
+  if(!data.semesters.length){html+='<div class="empty">No records</div>';}
+  else{
+    html += data.semesters.map(sem=>`
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <strong>${sem.label}</strong>
+          <span>Avg: <strong style="color:var(--accent)">${sem.average}</strong> &nbsp; CGPA: <strong style="color:var(--gold)">${sem.cgpa}</strong> &nbsp; Pass: ${sem.pass_rate}%</span>
+        </div>
+        <table style="width:100%"><thead><tr><th>Course</th><th>CA1</th><th>CA2</th><th>Exam</th><th>Total</th><th>Grade</th></tr></thead>
+        <tbody>
+          ${sem.courses.map(c=>`<tr>
+            <td>${c.course_code}</td><td>${c.ca1}</td><td>${c.ca2}</td><td>${c.exam}</td>
+            <td><strong>${c.total}</strong></td>
+            <td><span class="grade-badge grade-${c.grade}">${c.grade}</span></td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>`).join('');
+  }
+  document.getElementById('student-detail-content').innerHTML=html;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Modal helpers
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModalOnBg(e,id){ if(e.target===document.getElementById(id)) closeModal(id); }
+function showModalAlert(id,msg){ const el=document.getElementById(id); el.textContent=msg; el.className='alert error'; el.style.display='block'; }
+
+// Toast
+function toast(msg, type='success'){
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.className=`toast ${type} show`;
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// Logout
+async function doLogout(){
+  await api('POST','/api/auth/logout');
+  window.location.href='/auth';
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
