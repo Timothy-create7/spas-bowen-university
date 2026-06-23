@@ -162,7 +162,7 @@ body{
 .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:12px;}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
 
-.demo-hint{
+/*.demo-hint{
   padding:12px 16px;
   background:rgba(240,180,41,.06);
   border:1px solid rgba(240,180,41,.2);
@@ -170,7 +170,7 @@ body{
   font-family:'JetBrains Mono',monospace;
   cursor:pointer;
 }
-.demo-hint:hover{background:rgba(240,180,41,.1);}
+.demo-hint:hover{background:rgba(240,180,41,.1);}*/
 
 /* spinner */
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px;}
@@ -233,12 +233,6 @@ body{
       </div>
       <button class="btn-primary" onclick="doLogin()">Sign In</button>
 
-      <div class="divider">or use demo account</div>
-      <div class="demo-hint" onclick="fillDemo()">
-        📋 admin@bowen.edu.ng &nbsp;/&nbsp; admin123 &nbsp;→ click to fill
-      </div>
-    </div>
-
     <!-- SIGNUP -->
     <div id="signup-form" style="display:none">
       <div class="form-title">Create account</div>
@@ -288,11 +282,6 @@ function showAlert(id, msg, type='error'){
   el.className = `alert ${type}`;
   el.style.display = 'block';
   setTimeout(()=>el.style.display='none', 5000);
-}
-
-function fillDemo(){
-  document.getElementById('login-email').value = 'admin@bowen.edu.ng';
-  document.getElementById('login-pass').value  = 'admin123';
 }
 
 async function doLogin(){
